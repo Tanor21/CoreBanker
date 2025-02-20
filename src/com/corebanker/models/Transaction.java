@@ -50,28 +50,31 @@ public class Transaction {
      * Modifie la méthode processTransaction() pour inclure la journalisation
      */
     public void processTransaction() {
-        // Vérification du montant valide
+        // Vérifier si le montant est valide (positif)
         if (amount <= 0) {
             logTransaction("Échec de la transaction " + transactionId + " : Montant invalide.");
             System.out.println("Erreur : Montant de transaction invalide.");
             return; // On arrête ici si le montant est invalide
         }
 
-        // Vérification du solde disponible
+        // Vérifier si le solde du compte source est suffisant
         if (sourceAccount.getBalance() < amount) {
             logTransaction("Échec de la transaction " + transactionId + " : Fonds insuffisants.");
             System.out.println("Échec de la transaction : fonds insuffisants sur le compte de " + sourceAccount.getOwner());
             return; // On arrête ici si le solde est insuffisant
         }
 
-        // Débiter le compte source et créditer le compte cible
-        sourceAccount.withdraw(amount); // Retirer le montant du compte source
-        targetAccount.deposit(amount);  // Ajouter le montant au compte cible
+        // Effectuer la transaction
+        sourceAccount.withdraw(amount); // Débiter le compte source
+        targetAccount.deposit(amount);  // Créditer le compte cible
 
-        // Afficher que la transaction a réussi
-        System.out.println("Transaction réussie. ID: " + transactionId);
+        // Ajouter la transaction à l’historique des comptes concernés
+        sourceAccount.addTransactionToHistory(this);
+        sourceAccount.addTransactionToHistory(this);
+
         // Journaliser la transaction réussie
         logTransaction("Transaction réussie. ID: " + transactionId + " de " + sourceAccount.getOwner() + " à " + targetAccount.getOwner() + " pour " + amount + "€.");
+        System.out.println("Transaction réussie. ID: " + transactionId);
     }
 
 

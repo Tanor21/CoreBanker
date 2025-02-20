@@ -1,20 +1,47 @@
 package com.corebanker.models;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class BankAccount {
     private final String accountNumber;
     private final String owner;
     private double balance;
+    private List<Transaction> transactionHistory; // Historique des transactions
 
     /**
-     * Constructeur : initialise un compte bancaire avec un propriétaire et un solde initial.
-     * Un numéro de compte unique est généré automatiquement.
+     * Constructeur du compte bancaire
+     * @param owner Nom du propriétaire
+     * @param initialBalance Solde initial du compte
      */
     public BankAccount(String owner, double initialBalance) {
         this.accountNumber = generateAccountNumber();
         this.owner = owner;
         this.balance = initialBalance;
+        this.transactionHistory = new ArrayList<>(); // Initialisation de l'historique
+    }
+
+    /**
+     * Ajoute une transaction à l'historique du compte.
+     * @param transaction La transaction à ajouter.
+     */
+    public void addTransactionToHistory(Transaction transaction) {
+        transactionHistory.add(transaction);
+    }
+
+    /**
+     * Affiche l'historique des transactions du compte.
+     */
+    public void displayTransactionHistory() {
+        System.out.println("\n=== Historique des transactions pour " + owner + " ===");
+        if (transactionHistory.isEmpty()) {
+            System.out.println("Aucune transaction enregistrée.");
+        } else {
+            for (Transaction transaction : transactionHistory) {
+                transaction.displayTransactionDetails();
+            }
+        }
     }
 
     /**
