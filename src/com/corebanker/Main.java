@@ -1,36 +1,32 @@
 package com.corebanker;
 
 import com.corebanker.models.BankAccount;
+import com.corebanker.models.Transaction;
 
 public class Main {
     public static void main(String[] args) {
         System.out.println("======================================= Bienvenue dans l'application Core Banking =======================================");
 
-        // Création d'un compte bancaire avec un solde initial de 1000
-        BankAccount account1 = new BankAccount("Tanor", 1000.0);
+        // Création de deux comptes bancaires
+        BankAccount account1 = new BankAccount("Alice", 1000);
+        BankAccount account2 = new BankAccount("Bob", 500);
 
-
-        // Affichage des détails du compte
-        System.out.println("Détails du compte");
+        // Affichage des soldes initiaux
+        System.out.println("\n=== Soldes initiaux ===");
         account1.displayAccountDetails();
+        account2.displayAccountDetails();
 
-        // Dépôt d'argent
-        System.out.println("\nRetrait de 200...");
-        account1.deposit(500);
+        // Création et exécution d'une transaction
+        Transaction transaction = new Transaction(account1, account2, 200);
+        transaction.processTransaction();
 
-        // Retrait d'argent
-        System.out.println("\nWithdrawing 200...");
-        account1.withdraw(200);
-
-        // Tentative de retrait d'un montant supérieur au solde
-        System.out.println("\nRetrait de 2000 (devrait échouer)... ");
-        account1.withdraw(2000);
-
-        // Affichage du solde final
-        System.out.println("\n=== Détails finaux du compte ===");
+        // Affichage des soldes après transaction
+        System.out.println("\n=== Soldes après transaction ===");
         account1.displayAccountDetails();
+        account2.displayAccountDetails();
 
-
+        // Affichage des détails de la transaction
+        transaction.displayTransactionDetails();
 
     }
 }
