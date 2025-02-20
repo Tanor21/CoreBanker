@@ -16,9 +16,17 @@ public class Main {
         account1.displayAccountDetails();
         account2.displayAccountDetails();
 
-        // Création et exécution d'une transaction
-        Transaction transaction = new Transaction(account1, account2, 200);
-        transaction.processTransaction();
+        // Tentative de transaction avec un montant invalide
+        Transaction invalidTransaction = new Transaction(account1, account2, -200);
+        invalidTransaction.processTransaction(); // Cela doit échouer avec un message d'erreur
+
+        // Tentative de transaction avec un solde insuffisant
+        Transaction insufficientFundsTransaction = new Transaction(account2, account1, 600);
+        insufficientFundsTransaction.processTransaction(); // Cela doit échouer avec un message d'erreur
+
+        // Transaction valide
+        Transaction validTransaction = new Transaction(account1, account2, 200);
+        validTransaction.processTransaction(); // Cela doit réussir
 
         // Affichage des soldes après transaction
         System.out.println("\n=== Soldes après transaction ===");
@@ -26,7 +34,7 @@ public class Main {
         account2.displayAccountDetails();
 
         // Affichage des détails de la transaction
-        transaction.displayTransactionDetails();
+        validTransaction.displayTransactionDetails();
 
     }
 }
