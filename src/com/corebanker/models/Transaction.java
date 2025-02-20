@@ -1,5 +1,9 @@
 package com.corebanker.models;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
@@ -26,17 +30,36 @@ public class Transaction {
     }
 
     /**
+     * Journalise l'événement de la transaction dans un fichier de log.
+     * @param message Le message à enregistrer dans le log.
+     */
+    private void logTransaction(String message) {
+        try (FileWriter fw = new FileWriter("transaction_log.txt", true);
+             PrintWriter out = new PrintWriter(fw)) {
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
+            out.println(timestamp + " - " + message);
+        } catch (IOException e) {
+            System.out.println("Erreur lors de l'écriture dans le fichier de log.");
+        }
+    }
+
+    /**
      * Exécute la transaction entre les comptes
+     */
+    /**
+     * Modifie la méthode processTransaction() pour inclure la journalisation
      */
     public void processTransaction() {
         // Vérification du montant valide
         if (amount <= 0) {
+            logTransaction("Échec de la transaction " + transactionId + " : Montant invalide.");
             System.out.println("Erreur : Montant de transaction invalide.");
             return; // On arrête ici si le montant est invalide
         }
 
         // Vérification du solde disponible
         if (sourceAccount.getBalance() < amount) {
+            logTransaction("Échec de la transaction " + transactionId + " : Fonds insuffisants.");
             System.out.println("Échec de la transaction : fonds insuffisants sur le compte de " + sourceAccount.getOwner());
             return; // On arrête ici si le solde est insuffisant
         }
@@ -47,6 +70,8 @@ public class Transaction {
 
         // Afficher que la transaction a réussi
         System.out.println("Transaction réussie. ID: " + transactionId);
+        // Journaliser la transaction réussie
+        logTransaction("Transaction réussie. ID: " + transactionId + " de " + sourceAccount.getOwner() + " à " + targetAccount.getOwner() + " pour " + amount + "€.");
     }
 
 
