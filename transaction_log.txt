@@ -1,0 +1,3 @@
+2025-02-20 22:34:03 - Échec de la transaction 0d237d18-f297-4a30-bd73-8c8795423fc0 : Montant invalide.
+2025-02-20 22:34:03 - Échec de la transaction b4bcdaa8-0911-47f0-a494-276a87063184 : Fonds insuffisants.
+2025-02-20 22:34:03 - Transaction réussie. ID: 7b54b576-910d-4402-bf34-f3afeebe0e96 de Alice à Bob pour 200.0€.
