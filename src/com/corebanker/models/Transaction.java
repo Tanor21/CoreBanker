@@ -29,15 +29,26 @@ public class Transaction {
      * Exécute la transaction entre les comptes
      */
     public void processTransaction() {
-        // Vérification du solde disponible
-        if (sourceAccount.getBalance() >= amount) {
-            sourceAccount.withdraw(amount); // Débiter le compte source
-            targetAccount.deposit(amount); // Créditer le compte cible
-            System.out.println("Transaction réussie. ID: " + transactionId);
-        } else {
-            System.out.println("Échec de la transaction : fonds insuffisants.");
+        // Vérification du montant valide
+        if (amount <= 0) {
+            System.out.println("Erreur : Montant de transaction invalide.");
+            return; // On arrête ici si le montant est invalide
         }
+
+        // Vérification du solde disponible
+        if (sourceAccount.getBalance() < amount) {
+            System.out.println("Échec de la transaction : fonds insuffisants sur le compte de " + sourceAccount.getOwner());
+            return; // On arrête ici si le solde est insuffisant
+        }
+
+        // Débiter le compte source et créditer le compte cible
+        sourceAccount.withdraw(amount); // Retirer le montant du compte source
+        targetAccount.deposit(amount);  // Ajouter le montant au compte cible
+
+        // Afficher que la transaction a réussi
+        System.out.println("Transaction réussie. ID: " + transactionId);
     }
+
 
     /**
      * Affiche les détails de la transaction
