@@ -17,7 +17,6 @@ public class Transaction {
     private double amount; // Montant de la transaction
     private Date transactionDate; // Date de la transaction
 
-
     /**
      * Constructeur de la classe Transaction
      * @param sourceAccount Le compte source
@@ -49,7 +48,7 @@ public class Transaction {
     }
 
     /**
-     * Enregistre la transaction réussie dans un fichier transactions.log
+     * Enregistre la transaction dans le fichier transactions.log
      */
     private void saveTransactionToFile() {
         try (FileWriter fw = new FileWriter("transactions.log", true);
@@ -68,27 +67,39 @@ public class Transaction {
     }
 
     /**
-     * Exécute la transaction entre les comptes en appliquant les validations nécessaires
+     * Vérifie les préconditions avant de traiter la transaction.
+     * @return True si les conditions sont valides, sinon False.
      */
-    public void processTransaction() {
+    private boolean validateTransaction() {
         // Vérifier si les comptes existent
         if (sourceAccount == null || targetAccount == null) {
             System.out.println("⚠️ Erreur : Impossible de retrouver un ou plusieurs comptes !");
-            return;
+            return false;
         }
 
         // Vérifier si le montant est valide (positif)
         if (amount <= 0) {
             System.out.println("Erreur : Montant de transaction invalide.");
-            return;
+            return false;
         }
 
         // Vérifier si le solde du compte source est suffisant
         if (sourceAccount.getBalance() < amount) {
             System.out.println("Échec de la transaction : fonds insuffisants sur le compte de " + sourceAccount.getOwner());
-            // Sauvegarder la transaction échouée dans les logs
-            saveTransactionToFile();
-            return;
+            saveTransactionToFile(); // Sauvegarder l'échec dans les logs
+            return false;
+        }
+
+        return true; // Toutes les validations sont passées
+    }
+
+    /**
+     * Exécute la transaction entre les comptes après validation.
+     */
+    public void processTransaction() {
+        // Valider la transaction avant de l'exécuter
+        if (!validateTransaction()) {
+            return; // La transaction ne sera pas exécutée si les validations échouent
         }
 
         // Effectuer la transaction
@@ -102,7 +113,7 @@ public class Transaction {
         // Affichage du succès de la transaction
         System.out.println("Transaction réussie. ID: " + transactionId);
 
-        // Sauvegarde de la transaction dans le fichier
+        // Sauvegarder la transaction dans le fichier
         saveTransactionToFile();
     }
 
@@ -110,6 +121,8 @@ public class Transaction {
      * Méthode statique pour recréer une transaction depuis les logs.
      * @param transactionId L'identifiant unique de la transaction
      * @param timestamp La date de la transaction sous forme de texte
+     * @param sourceAccountNumber Le numéro de compte de l'expéditeur
+     * @param targetAccountNumber Le numéro de compte du destinataire
      * @param amount Le montant de la transaction
      * @return Une instance de Transaction reconstruite
      */
@@ -118,7 +131,7 @@ public class Transaction {
         System.out.println("   - Expéditeur : " + sourceAccountNumber);
         System.out.println("   - Destinataire : " + targetAccountNumber);
 
-        // Assurons-nous que sourceAccountNumber et targetAccountNumber sont des numéros de compte valides
+        // Recherche des comptes dans le gestionnaire
         BankAccount sourceAccount = BankAccountManager.findAccountByNumber(sourceAccountNumber);
         BankAccount targetAccount = BankAccountManager.findAccountByNumber(targetAccountNumber);
 
@@ -127,9 +140,11 @@ public class Transaction {
             return null;
         }
 
+        // Créer la transaction à partir des informations du log
         Transaction transaction = new Transaction(sourceAccount, targetAccount, amount);
         transaction.transactionId = transactionId;
 
+        // Parsee la date du log
         try {
             transaction.transactionDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(timestamp);
         } catch (ParseException e) {
