@@ -1,8 +1,11 @@
 package com.corebanker.models;
 
+import com.corebanker.managers.BankAccountManager;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
@@ -22,46 +25,70 @@ public class Transaction {
      * @param amount Le montant à transférer
      */
     public Transaction(BankAccount sourceAccount, BankAccount targetAccount, double amount) {
-        this.transactionId = UUID.randomUUID().toString(); // Génération d'un identifiant unique
+        this.transactionId = UUID.randomUUID().toString(); // Génère un ID unique pour la transaction
         this.sourceAccount = sourceAccount;
         this.targetAccount = targetAccount;
         this.amount = amount;
-        this.transactionDate = new Date();
+        this.transactionDate = new Date(); // Capture la date et l'heure actuelles
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    public Date getTransactionDate() {
+        return transactionDate;
+    }
+
+    public void setTransactionDate(Date transactionDate) {
+        this.transactionDate = transactionDate;
     }
 
     /**
-     * Journalise l'événement de la transaction dans un fichier de log.
-     * @param message Le message à enregistrer dans le log.
+     * Enregistre la transaction réussie dans un fichier transactions.log
      */
-    private void logTransaction(String message) {
-        try (FileWriter fw = new FileWriter("transaction_log.txt", true);
+    private void saveTransactionToFile() {
+        try (FileWriter fw = new FileWriter("transactions.log", true);
              PrintWriter out = new PrintWriter(fw)) {
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
-            out.println(timestamp + " - " + message);
+            // Formatage de la date
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(transactionDate);
+
+            // Ligne formatée pour être stockée sous forme CSV
+            String logEntry = transactionId + "," + timestamp + "," + sourceAccount.getAccountNumber() + "," + targetAccount.getAccountNumber() + "," + amount;
+
+            // Écriture dans le fichier
+            out.println(logEntry);
         } catch (IOException e) {
-            System.out.println("Erreur lors de l'écriture dans le fichier de log.");
+            System.out.println("Erreur lors de l'écriture dans le fichier transactions.log.");
         }
     }
 
     /**
-     * Exécute la transaction entre les comptes
-     */
-    /**
-     * Modifie la méthode processTransaction() pour inclure la journalisation
+     * Exécute la transaction entre les comptes en appliquant les validations nécessaires
      */
     public void processTransaction() {
+        // Vérifier si les comptes existent
+        if (sourceAccount == null || targetAccount == null) {
+            System.out.println("⚠️ Erreur : Impossible de retrouver un ou plusieurs comptes !");
+            return;
+        }
+
         // Vérifier si le montant est valide (positif)
         if (amount <= 0) {
-            logTransaction("Échec de la transaction " + transactionId + " : Montant invalide.");
             System.out.println("Erreur : Montant de transaction invalide.");
-            return; // On arrête ici si le montant est invalide
+            return;
         }
 
         // Vérifier si le solde du compte source est suffisant
         if (sourceAccount.getBalance() < amount) {
-            logTransaction("Échec de la transaction " + transactionId + " : Fonds insuffisants.");
             System.out.println("Échec de la transaction : fonds insuffisants sur le compte de " + sourceAccount.getOwner());
-            return; // On arrête ici si le solde est insuffisant
+            // Sauvegarder la transaction échouée dans les logs
+            saveTransactionToFile();
+            return;
         }
 
         // Effectuer la transaction
@@ -70,25 +97,61 @@ public class Transaction {
 
         // Ajouter la transaction à l’historique des comptes concernés
         sourceAccount.addTransactionToHistory(this);
-        sourceAccount.addTransactionToHistory(this);
+        targetAccount.addTransactionToHistory(this);
 
-        // Journaliser la transaction réussie
-        logTransaction("Transaction réussie. ID: " + transactionId + " de " + sourceAccount.getOwner() + " à " + targetAccount.getOwner() + " pour " + amount + "€.");
+        // Affichage du succès de la transaction
         System.out.println("Transaction réussie. ID: " + transactionId);
+
+        // Sauvegarde de la transaction dans le fichier
+        saveTransactionToFile();
     }
 
+    /**
+     * Méthode statique pour recréer une transaction depuis les logs.
+     * @param transactionId L'identifiant unique de la transaction
+     * @param timestamp La date de la transaction sous forme de texte
+     * @param amount Le montant de la transaction
+     * @return Une instance de Transaction reconstruite
+     */
+    public static Transaction fromLog(String transactionId, String timestamp, String sourceAccountNumber, String targetAccountNumber, double amount) {
+        System.out.println("🔍 Recherche des comptes pour la transaction " + transactionId);
+        System.out.println("   - Expéditeur : " + sourceAccountNumber);
+        System.out.println("   - Destinataire : " + targetAccountNumber);
+
+        // Assurons-nous que sourceAccountNumber et targetAccountNumber sont des numéros de compte valides
+        BankAccount sourceAccount = BankAccountManager.findAccountByNumber(sourceAccountNumber);
+        BankAccount targetAccount = BankAccountManager.findAccountByNumber(targetAccountNumber);
+
+        if (sourceAccount == null || targetAccount == null) {
+            System.out.println("⚠️ Erreur : Impossible de retrouver un ou plusieurs comptes !");
+            return null;
+        }
+
+        Transaction transaction = new Transaction(sourceAccount, targetAccount, amount);
+        transaction.transactionId = transactionId;
+
+        try {
+            transaction.transactionDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(timestamp);
+        } catch (ParseException e) {
+            System.out.println("Erreur de format de date dans les logs : " + e.getMessage());
+        }
+
+        return transaction;
+    }
 
     /**
-     * Affiche les détails de la transaction
+     * Affiche les détails de la transaction.
      */
     public void displayTransactionDetails() {
         System.out.println("=== Transaction Details ===");
         System.out.println("ID: " + transactionId);
-        System.out.println("Source: " + sourceAccount.getOwner());
-        System.out.println("Cible: " + targetAccount.getOwner());
+        System.out.println("Date: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(transactionDate));
         System.out.println("Montant: " + amount);
-        System.out.println("Date: " + transactionDate);
+
+        // Vérifier si les comptes existent avant d'afficher leurs propriétaires
+        System.out.println("Expéditeur: " + (sourceAccount != null ? sourceAccount.getOwner() : "Compte inconnu"));
+        System.out.println("Destinataire: " + (targetAccount != null ? targetAccount.getOwner() : "Compte inconnu"));
+
+        System.out.println("===========================");
     }
-
-
 }
