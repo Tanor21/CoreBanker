@@ -5,9 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BankAccountManager {
-    private static List<BankAccount> accounts = new ArrayList<>();
+    private final static List<BankAccount> accounts = new ArrayList<>();
 
-    // Méthode pour ajouter un compte
+
+    /**
+     * Méthode pour ajouter un compte.
+     * @param account Le compte à ajouter.
+     */
     public static void addAccount(BankAccount account) {
         if (account != null) {
             accounts.add(account);
@@ -17,7 +21,10 @@ public class BankAccountManager {
         }
     }
 
-    // Méthode pour rechercher un compte par son numéro
+    /**
+     * Méthode pour rechercher un compte par son numéro.
+     * @param accountNumber L'identifiant du compte.
+     */
     public static BankAccount findAccountByNumber(String accountNumber) {
         if (accountNumber == null || accountNumber.isEmpty()) {
             System.out.println("Erreur : Numéro de compte invalide.");

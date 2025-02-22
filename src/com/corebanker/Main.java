@@ -3,14 +3,16 @@ package com.corebanker;
 import com.corebanker.managers.BankAccountManager;
 import com.corebanker.models.BankAccount;
 import com.corebanker.models.Transaction;
+import com.corebanker.enums.TransactionStatus;
+import com.corebanker.enums.TransactionType;
 
 public class Main {
     public static void main(String[] args) {
         System.out.println("======================================= Bienvenue dans l'application Core Banking =======================================");
 
         // Création de deux comptes bancaires avec des soldes initiaux
-        BankAccount account1 = new BankAccount("Alice", 1000);
-        BankAccount account2 = new BankAccount("Bob", 500);
+        BankAccount account1 = new BankAccount("Bob", 1000);
+        BankAccount account2 = new BankAccount("Alice", 500);
 
         // Ajout des comptes au gestionnaire
         BankAccountManager.addAccount(account1);
@@ -21,28 +23,46 @@ public class Main {
         account1.displayAccountDetails();
         account2.displayAccountDetails();
 
-        // Effectuer des transactions
         System.out.println("\n=== Exécution des transactions ===");
 
-        // Transaction valide : Alice envoie 200 à Bob
-        Transaction transaction1 = new Transaction(account1, account2, 200);
-        transaction1.processTransaction();
+        // Transaction valide : Bob envoie 500€ à Alice
+        executeTransaction(account1, account2, 500);
 
-        // Transaction valide : Bob envoie 50 à Alice
-        Transaction transaction2 = new Transaction(account2, account1, 50);
-        transaction2.processTransaction();
+        // Transaction valide : Alice envoie 200€ à Bob
+        executeTransaction(account2, account1, 200);
 
-        // Transaction invalide : Bob tente d'envoyer plus d'argent qu'il n'a
-        Transaction transaction3 = new Transaction(account2, account1, 600);
-        transaction3.processTransaction();
-
-        // Transaction invalide : Bob tente d'envoyer plus d'argent qu'il n'a
-        Transaction transaction4 = new Transaction(account2, account1, 60000);
-        transaction4.processTransaction(); // Cette transaction échouera et affichera un message d'erreur
+        // Transaction invalide : Alice tente d'envoyer 2000€ (fonds insuffisants)
+        executeTransaction(account2, account1, 2000);
 
         // Affichage de l'historique des transactions après exécution
         System.out.println("\n=== Historique des transactions après exécution ===");
         account1.displayTransactionHistory();
         account2.displayTransactionHistory();
     }
+
+    /**
+     * Méthode utilitaire pour exécuter une transaction et afficher le résultat.
+     */
+    private static void executeTransaction(BankAccount source, BankAccount target, double amount) {
+        System.out.println("---------------------------------------------------");
+        System.out.println("🛠️ Nouvelle transaction : " + source.getOwner() + " → " + target.getOwner() + " | Montant : " + amount + "€");
+
+        if (amount <= 0) {
+            System.out.println("❌ Erreur : Le montant doit être supérieur à zéro.");
+            return;
+        }
+
+        Transaction transaction = new Transaction(source, target, amount, TransactionType.TRANSFER, TransactionStatus.PENDING);
+
+        if (transaction.processTransaction()) {  // ✅ Vérification du retour boolean
+            System.out.println("✅ Transaction réussie ! ID: " + transaction.getTransactionId());
+        } else {
+            System.out.println("❌ Transaction échouée !");
+        }
+
+        source.displayAccountDetails();
+        target.displayAccountDetails();
+    }
+
+
 }
